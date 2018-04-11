@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package decode.datastore;
+
+// EncryptedStore is the high level interface for the encrypted data store. It
+// exposes just two methods which allow data to be written and read from the
+// store.
+service EncryptedStore {
+  rpc WriteData (WriteRequest) returns (WriteResponse);
+  rpc ReadData (ReadRequest) returns (ReadResponse);
+}
+
+// WriteRequest is the message we send to the store in order to write encrypted
+// data for particular user.
+message WriteRequest {
+  // The public key for a consumer for which the included data has been
+  // encrypted.
+  string public_key = 1;
+
+  // The encrypted data comprising the event to be stored. This data is
+  // completely opaque to the data store, so is represented as just an
+  // arbitrary sequence of bytes.
+  bytes data = 2;
+}
+
+// WriteResponse is a placeholder response message returned from the call to
+// the service. Currently it is empty as we have not identified any fields that
+// should be returned, however we keep as a type under our control such that
+// should such a need be identified in the future, this type can be extended to
+// include those fields.
+message WriteResponse {
+}
+
+// Timestamp represents a point in time independent of any time zone or
+// calendar, represented as seconds and fractions of seconds at nanosecond
+// resolution in UTC Epoch time.
+message Timestamp {
+  // Contains the UTC Epoch time in seconds expressed as a 64 bit integer.
+  int64 seconds = 1;
+
+  // Contains the fractional part of UTC Epoch time in nanoseconds expressed as
+  // a 64 bit integer.
+  int64 nanoseconds = 2;
+}
+
+// ReadRequest is a message sent by a consumer to the service by which
+// encrypted data can be requested for a specific user, identified by their
+// public key.
+message ReadRequest {
+  // The public key for a consumer for which encrypted data has been stored.
+  string public_key = 1;
+
+  // The start of an interval for which data is being requested.
+  Timestamp start_time = 2;
+
+  // The end of an interval for which data is being requested, represented as
+  // Timestamp message. This field is optional and if omitted defaults to 'now'
+  Timestamp end_time = 3;
+
+  // A pagination cursor returned from the call to ReadData that indicates from
+  // where data access should continue. This field is optional, if not present
+  // it means start from the beginning of the dataset.
+  string page_cursor = 4;
+
+  // Integer value containing the maximum desired number of results within each
+  // page of data.
+  int32 page_size = 5;
+}
+
+// ReadResponse is the message returned from our service in response to a
+// ReadRequest. Comprises the public key of the user for which the data was
+// requested, a repeated list of EncryptedEvent messages comprising the data,
+// but also a cursor by which the client can paginate through a large dataset.
+// Note we do not attempt to use any streaming functionalities here to simplify
+// things, rather we will just allow clients to paginate through datasets to
+// obtain the data they need.
+message ReadResponse {
+  // The public of the consumer for which this response struct contains data.
+  string public_key = 1;
+
+  // A string containing a cursor pointing at the next page of encrypted
+  // events. Can be used by a client when constructing the next ReadRequest to
+  // allow the client to easily consume all results within a time window. If
+  // this value is an empty string, then no further pages are available to be
+  // requested.
+  string next_page_cursor = 2;
+
+  // EncryptedEvent contains a single encrypted event message stored for a
+  // client. This comprises a timestamp which is the instance the data was
+  // received and written to storage, along with the encrypted list of bytes
+  // comprising the message. This message is returned
+  message EncryptedEvent {
+    // The time at which this event was recorded expressed in UTC Epoch time.
+    Timestamp timestamp = 1;
+
+    // The list of bytes comprising a chunk of encrypted data for a user.
+    bytes data = 2;
+  }
+
+  // A list of EncryptedEvent messages comprising a single page of results
+  // within a larger requested dataset.
+  repeated EncryptedEvent events = 3;
+}
