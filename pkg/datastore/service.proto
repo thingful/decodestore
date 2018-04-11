@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package decode.datastore;
+option go_package = "datastore";
 
 // EncryptedStore is the high level interface for the encrypted data store. It
 // exposes just two methods which allow data to be written and read from the
