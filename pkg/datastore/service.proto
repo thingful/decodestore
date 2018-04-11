@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package decode.datastore;
+package decode.thingful.datastore;
 option go_package = "datastore";
 
 // EncryptedStore is the high level interface for the encrypted data store. It
