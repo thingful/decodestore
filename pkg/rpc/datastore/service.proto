@@ -3,6 +3,8 @@ syntax = "proto3";
 package decode.thingful.datastore;
 option go_package = "datastore";
 
+import "google/protobuf/timestamp.proto";
+
 // EncryptedStore is the high level interface for the encrypted data store. It
 // exposes just two methods which allow data to be written and read from the
 // store.
@@ -32,18 +34,6 @@ message WriteRequest {
 message WriteResponse {
 }
 
-// Timestamp represents a point in time independent of any time zone or
-// calendar, represented as seconds and fractions of seconds at nanosecond
-// resolution in UTC Epoch time.
-message Timestamp {
-  // Contains the UTC Epoch time in seconds expressed as a 64 bit integer.
-  int64 seconds = 1;
-
-  // Contains the fractional part of UTC Epoch time in nanoseconds expressed as
-  // a 64 bit integer.
-  int64 nanoseconds = 2;
-}
-
 // ReadRequest is a message sent by a consumer to the service by which
 // encrypted data can be requested for a specific user, identified by their
 // public key.
@@ -52,11 +42,11 @@ message ReadRequest {
   string public_key = 1;
 
   // The start of an interval for which data is being requested.
-  Timestamp start_time = 2;
+  google.protobuf.Timestamp start_time = 2;
 
   // The end of an interval for which data is being requested, represented as
   // Timestamp message. This field is optional and if omitted defaults to 'now'
-  Timestamp end_time = 3;
+  google.protobuf.Timestamp end_time = 3;
 
   // A pagination cursor returned from the call to ReadData that indicates from
   // where data access should continue. This field is optional, if not present
@@ -66,6 +56,18 @@ message ReadRequest {
   // Integer value containing the maximum desired number of results within each
   // page of data.
   int32 page_size = 5;
+}
+
+// EncryptedEvent contains a single encrypted event message stored for a
+// client. This comprises a timestamp which is the instance the data was
+// received and written to storage, along with the encrypted list of bytes
+// comprising the message. This message is returned
+message EncryptedEvent {
+  // The time at which this event was recorded expressed in UTC Epoch time.
+  google.protobuf.Timestamp timestamp = 1;
+
+  // The list of bytes comprising a chunk of encrypted data for a user.
+  bytes data = 2;
 }
 
 // ReadResponse is the message returned from our service in response to a
@@ -85,18 +87,6 @@ message ReadResponse {
   // this value is an empty string, then no further pages are available to be
   // requested.
   string next_page_cursor = 2;
-
-  // EncryptedEvent contains a single encrypted event message stored for a
-  // client. This comprises a timestamp which is the instance the data was
-  // received and written to storage, along with the encrypted list of bytes
-  // comprising the message. This message is returned
-  message EncryptedEvent {
-    // The time at which this event was recorded expressed in UTC Epoch time.
-    Timestamp timestamp = 1;
-
-    // The list of bytes comprising a chunk of encrypted data for a user.
-    bytes data = 2;
-  }
 
   // A list of EncryptedEvent messages comprising a single page of results
   // within a larger requested dataset.
