@@ -10,22 +10,27 @@ import (
 	"github.com/thingful/datastore/pkg/rpc/datastore"
 )
 
-// crypto is a type alias for a byte slice, just to make this implementation a
-// little easier to read
-type crypto []byte
-
-// Server implements the EncryptedStore interface defined in our proto file.
-type Server struct {
-	store map[string][]crypto
+// event is an internal type for recording an encrypted message for a consumer.
+type event struct {
+	timestamp time.Time
+	data      []byte
 }
 
+// Server implements the EncryptedStore interface defined in our proto file. It
+// just wraps a simple string/event map which we use to simulate the simplest
+// possible data store.
+type Server struct {
+	store map[string]*event
+}
+
+// verify the adherence to the interface at compile time
 var _ datastore.EncryptedStore = &Server{}
 
 // NewServer instantiates and returns a new Server instance that implements our
 // EncryptedStore interface.
 func NewServer() datastore.EncryptedStore {
 	s := &Server{
-		store: make(map[string][]crypto),
+		store: make(map[string]*event),
 	}
 
 	return s
@@ -38,11 +43,12 @@ func (s *Server) WriteData(ctx context.Context, req *datastore.WriteRequest) (*d
 		return nil, twirp.InvalidArgumentError("public_key", "is required to identify the consumer for which data should be stored")
 	}
 
-	if s.store[req.PublicKey] == nil {
-		s.store[req.PublicKey] = []crypto{}
+	ev := &event{
+		timestamp: time.Now(),
+		data:      req.Data,
 	}
 
-	s.store[req.PublicKey] = append(s.store[req.PublicKey], req.Data)
+	s.store[req.PublicKey] = ev
 
 	return &datastore.WriteResponse{}, nil
 }
@@ -54,28 +60,21 @@ func (s *Server) ReadData(ctx context.Context, req *datastore.ReadRequest) (*dat
 		return nil, twirp.InvalidArgumentError("public_key", "is required to identify the consumer for which data should be returned")
 	}
 
-	// is a slice of byte slices or nil
-	encryptedEvents := s.store[req.PublicKey]
-
-	if encryptedEvents == nil {
+	ev := s.store[req.PublicKey]
+	if ev == nil {
 		return nil, twirp.NotFoundError("unable to find data for the requested consumer")
 	}
 
-	events := []*datastore.EncryptedEvent{}
-
-	// we aren't really storing data properly in this little fake implementation,
-	// so just set time to now, and wrap as a protobuf Timestamp instance
-	t, err := ptypes.TimestampProto(time.Now())
+	t, err := ptypes.TimestampProto(ev.timestamp)
 	if err != nil {
-		return nil, err
+		return nil, twirp.InternalErrorWith(err)
 	}
 
-	for _, encryptedEvent := range encryptedEvents {
-		event := &datastore.EncryptedEvent{
+	events := []*datastore.EncryptedEvent{
+		&datastore.EncryptedEvent{
 			EventTime: t,
-			Data:      encryptedEvent,
-		}
-		events = append(events, event)
+			Data:      ev.data,
+		},
 	}
 
 	return &datastore.ReadResponse{
