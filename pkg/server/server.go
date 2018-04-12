@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/thingful/datastore/pkg/impl/datastoreserver"
+	"github.com/thingful/datastore/pkg/internal/datastoreserver"
 	"github.com/thingful/datastore/pkg/rpc/datastore"
 )
 
