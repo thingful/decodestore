@@ -64,7 +64,7 @@ message ReadRequest {
 // comprising the message. This message is returned
 message EncryptedEvent {
   // The time at which this event was recorded expressed in UTC Epoch time.
-  google.protobuf.Timestamp timestamp = 1;
+  google.protobuf.Timestamp event_time = 1;
 
   // The list of bytes comprising a chunk of encrypted data for a user.
   bytes data = 2;
