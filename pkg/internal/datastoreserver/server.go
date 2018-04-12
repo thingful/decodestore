@@ -7,7 +7,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/twitchtv/twirp"
 
-	"github.com/thingful/datastore/pkg/rpc/datastore"
+	"github.com/thingful/decodestore/pkg/rpc/datastore"
 )
 
 // event is an internal type for recording an encrypted message for a consumer.

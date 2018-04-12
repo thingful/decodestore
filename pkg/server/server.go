@@ -8,8 +8,8 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/thingful/datastore/pkg/internal/datastoreserver"
-	"github.com/thingful/datastore/pkg/rpc/datastore"
+	"github.com/thingful/decodestore/pkg/internal/datastoreserver"
+	"github.com/thingful/decodestore/pkg/rpc/datastore"
 )
 
 type Server struct {

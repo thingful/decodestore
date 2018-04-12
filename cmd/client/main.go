@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/thingful/datastore/pkg/rpc/datastore"
+	"github.com/thingful/decodestore/pkg/rpc/datastore"
 )
 
 func main() {
