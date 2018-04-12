@@ -10,12 +10,26 @@ import (
 	"github.com/thingful/datastore/pkg/rpc/datastore"
 )
 
+// crypto is a type alias for a byte slice, just to make this implementation a
+// little easier to read
+type crypto []byte
+
 // Server implements the EncryptedStore interface defined in our proto file.
 type Server struct {
-	store map[string][][]byte
+	store map[string][]crypto
 }
 
 var _ datastore.EncryptedStore = &Server{}
+
+// NewServer instantiates and returns a new Server instance that implements our
+// EncryptedStore interface.
+func NewServer() datastore.EncryptedStore {
+	s := &Server{
+		store: make(map[string][]crypto),
+	}
+
+	return s
+}
 
 // WriteData is our implementation of the corresponding method on our interface
 // that persists data to some store.
@@ -25,7 +39,7 @@ func (s *Server) WriteData(ctx context.Context, req *datastore.WriteRequest) (*d
 	}
 
 	if s.store[req.PublicKey] == nil {
-		s.store[req.PublicKey] = [][]byte{}
+		s.store[req.PublicKey] = []crypto{}
 	}
 
 	s.store[req.PublicKey] = append(s.store[req.PublicKey], req.Data)
@@ -49,7 +63,8 @@ func (s *Server) ReadData(ctx context.Context, req *datastore.ReadRequest) (*dat
 
 	events := []*datastore.EncryptedEvent{}
 
-	// we aren't really storing data here, so just set time to now, and wrap as a protobuf Timestamp instance
+	// we aren't really storing data properly in this little fake implementation,
+	// so just set time to now, and wrap as a protobuf Timestamp instance
 	t, err := ptypes.TimestampProto(time.Now())
 	if err != nil {
 		return nil, err
@@ -57,7 +72,7 @@ func (s *Server) ReadData(ctx context.Context, req *datastore.ReadRequest) (*dat
 
 	for _, encryptedEvent := range encryptedEvents {
 		event := &datastore.EncryptedEvent{
-			Timestamp: t,
+			EventTime: t,
 			Data:      encryptedEvent,
 		}
 		events = append(events, event)

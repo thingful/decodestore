@@ -18,7 +18,7 @@ service EncryptedStore {
 message WriteRequest {
   // The public key for a consumer for which the included data has been
   // encrypted.
-  string public_key = 1;
+  string public_key = 1; // must be present
 
   // The encrypted data comprising the event to be stored. This data is
   // completely opaque to the data store, so is represented as just an
@@ -39,7 +39,7 @@ message WriteResponse {
 // public key.
 message ReadRequest {
   // The public key for a consumer for which encrypted data has been stored.
-  string public_key = 1;
+  string public_key = 1; // must be present
 
   // The start of an interval for which data is being requested.
   google.protobuf.Timestamp start_time = 2;
