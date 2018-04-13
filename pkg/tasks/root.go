@@ -17,9 +17,6 @@ var rootCmd = &cobra.Command{
   provide tools that put individuals in control of their personal
   information, allowing them to decide when and who to share it with.
 		`),
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("dcs")
-	},
 }
 
 func Execute() {
