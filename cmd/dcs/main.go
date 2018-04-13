@@ -1,9 +1,7 @@
 package main
 
-import "github.com/thingful/decodestore/pkg/server"
+import "github.com/thingful/decodestore/pkg/tasks"
 
 func main() {
-	server := server.NewServer(":8080")
-
-	server.Start()
+	tasks.Execute()
 }
