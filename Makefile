@@ -29,6 +29,9 @@ gen: ## Run the protobuf compiler to generate implementation stubs.
 clean:
 	rm -rf .go bin .cache
 
+build-darwin:
+	@$(MAKE) --no-print-directory OS=darwin build
+
 build: bin/$(OS)/$(ARCH)/$(BIN)
 
 bin/$(OS)/$(ARCH)/$(BIN): build-dirs
