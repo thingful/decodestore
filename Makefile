@@ -7,7 +7,7 @@ PACKAGE := $(BASEPACKAGE)/cmd/$(BIN)
 BUILD_DIR := build
 BUILD_FLAGS := -v -ldflags "-extldflags -static -X $(BASE_PACKAGE)/pkg/version.Version=$(VERSION) -X \"$(BASE_PACKAGE)/pkg/version.BuildDate=$(BUILD_DATE)\""
 
-BUILD_IMAGE := thingful/decodestorebuilder
+BUILD_IMAGE := thingful/dcs-builder
 
 OS ?= linux
 ARCH ?= amd64
@@ -28,10 +28,6 @@ gen: ## Run the protobuf compiler to generate implementation stubs.
 	  -w /go/src/$(BASE_PACKAGE) \
 		$(BUILD_IMAGE) \
 		retool do protoc --proto_path=/go/src:. --twirp_out=. --go_out=. ./pkg/rpc/datastore/service.proto
-
-.PHONY: clean
-clean:
-	rm -rf .go bin .cache
 
 build-darwin:
 	@$(MAKE) --no-print-directory OS=darwin build
@@ -115,7 +111,7 @@ push: .push-$(DOTFILE_IMAGE) push-name
 	@docker images -q $(IMAGE):$(VERSION) > $@
 
 .PHONY: push-name
-push-name:
+push-name: ## display the name of the just pushed image
 	@echo "pushed: $(IMAGE):$(VERSION)"
 
 .PHONY: version
@@ -130,3 +126,14 @@ build-dirs: ## creates build directories
 .PHONY: build-builder
 build-builder: ## builds our builder base container locally
 	@docker build -t $(BUILD_IMAGE) -f ./Dockerfile.builder .
+
+.PHONY: clean
+clean: container-clean bin-clean ## clean everything
+
+.PHONY: container-clean
+container-clean: ## clean container artefacts
+	rm -rf .container-* .dockerfile-* .push-*
+
+.PHONY: bin-clean
+bin-clean: ## clean build artefacts
+	rm -rf .go bin .cache
