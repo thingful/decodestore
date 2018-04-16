@@ -14,6 +14,10 @@ ARCH ?= amd64
 
 SRC_DIRS := cmd pkg
 
+REGISTRY ?= thingful
+
+IMAGE := $(REGISTRY)/$(BIN)-$(ARCH)
+
 .PHONY: gen
 gen: ## Run the protobuf compiler to generate implementation stubs.
 	@docker run \
@@ -86,15 +90,43 @@ shell: build-dirs
 		$(BUILD_IMAGE) \
 		/bin/sh $(CMD)
 
+DOTFILE_IMAGE = $(subst :,_,$(subst /,_,$(IMAGE))-$(VERSION))
+
+container: .container-$(DOTFILE_IMAGE) container-name
+.container-$(DOTFILE_IMAGE): bin/$(OS)/$(ARCH)/$(BIN) Dockerfile.in
+ifeq ($(OS),darwin)
+	@echo "Unable to build darwin container"
+	exit 1
+endif
+
+	@sed \
+		-e 's|ARG_BIN|$(BIN)|g' \
+		-e 's|ARG_ARCH|$(ARCH)|g' \
+		Dockerfile.in > .dockerfile-$(ARCH)
+	@docker build -t $(IMAGE):$(VERSION) -f .dockerfile-$(ARCH) .
+	@docker images -q $(IMAGE):$(VERSION) > $@
+
+container-name:
+	@echo "container: $(IMAGE):$(VERSION)"
+
+push: .push-$(DOTFILE_IMAGE) push-name
+.push-$(DOTFILE_IMAGE): .container-$(DOTFILE_IMAGE)
+	@docker push $(IMAGE):$(VERSION)
+	@docker images -q $(IMAGE):$(VERSION) > $@
+
+.PHONY: push-name
+push-name:
+	@echo "pushed: $(IMAGE):$(VERSION)"
+
 .PHONY: version
 version: ## returns the current version
 	@echo $(VERSION)
 
 .PHONY: build-dirs
-build-dirs:
+build-dirs: ## creates build directories
 	@mkdir -p bin/$(ARCH)
 	@mkdir -p .go/src/$(BASE_PACKAGE) .go/pkg .go/bin .go/std/$(OS)/$(ARCH) .cache/go-build
 
 .PHONY: build-builder
-build-builder:
+build-builder: ## builds our builder base container locally
 	@docker build -t $(BUILD_IMAGE) -f ./Dockerfile.builder .
