@@ -1,4 +1,6 @@
-build
-.go
-.cache
-bin
+/bin
+/.go
+/.push-*
+/.container-*
+/.dockerfile-*
+/.cache
