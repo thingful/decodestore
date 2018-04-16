@@ -174,7 +174,7 @@ func (m *EncryptedEvent) GetData() []byte {
 // things, rather we will just allow clients to paginate through datasets to
 // obtain the data they need.
 type ReadResponse struct {
-	// The public of the consumer for which this response struct contains data.
+	// The public key of the consumer for who this response contains data.
 	PublicKey string `protobuf:"bytes,1,opt,name=public_key,json=publicKey" json:"public_key,omitempty"`
 	// A string containing a cursor pointing at the next page of encrypted
 	// events. Can be used by a client when constructing the next ReadRequest to
