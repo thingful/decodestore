@@ -1,0 +1,12 @@
+FROM alpine
+
+MAINTAINER Thingful <info@thingful.net>
+
+RUN apk add --update --no-cache \
+  ca-certificates && \
+  rm -rf /var/cache/apk/*
+
+COPY bin/ARG_BIN /ARG_BIN
+
+USER nobody:nobody
+ENTRYPOINT ["/ARG_BIN"]
